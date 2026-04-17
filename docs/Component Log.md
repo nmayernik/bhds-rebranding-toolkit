@@ -87,3 +87,44 @@ One entry per component. Each entry covers both `bhds1` and `bhds2` variants. Or
 - Not yet reviewed. Run the a11y-reviewer agent (or ask the main thread) to check contrast at current sentinel values (all `#ff00ff` which will fail by design), keyboard reachability, focus visibility on both themes, touch target size for `md` (currently 40px, under 44pt WCAG target). Revisit contrast once real tokens are pasted in.
 
 ---
+
+### `Card`
+
+**Date:** 2026-04-17
+**Source:** `src/components/ui/card.tsx`
+**Compare render:** `/compare` > "Card" section
+
+**Brand intent**
+- BHDS 1: solid filled surface, modest radius, subtle shadow. Informational container, quiet presence.
+- BHDS 2: solid filled surface with a softer shadow + larger radius for warmth; plus a distinctive border-only "service tile" pattern that carries the service grid on marketing pages. No fill, confident border, roomier padding.
+
+**Structural differences between variants**
+- Radius: both consume `--bhds-radius-card`; token value differs per theme (bhds1: 8px, bhds2: 16px).
+- Shadow: bhds1 filled uses `--bhds-shadow-sm`; bhds2 filled uses `--bhds-shadow-md`. Outline cards carry no shadow in either theme.
+- Border: outline surface uses `--bhds-color-border-strong` for both themes. Filled surface uses a transparent border of the same width so filled and outline share the same box size.
+- Padding ramp: filled uses `space-4` on all sides. BHDS 2 outline bumps vertical padding to `space-6` and header / content / footer horizontal padding to `space-6` via `group-data-[theme=bhds2]/card:group-data-[surface=outline]/card:px-...`.
+- Typography: CardTitle weight differs per theme (bhds1 medium, bhds2 semibold). CardDescription consistent across themes.
+
+**Tokens consumed**
+- Shared: `--bhds-radius-card`, `--bhds-color-bg-surface`, `--bhds-color-border-strong`, `--bhds-color-border-default`, `--bhds-color-text-primary`, `--bhds-color-text-secondary`, `--bhds-font-size-sm`, `--bhds-font-size-lg`, `--bhds-line-height-snug`, `--bhds-line-height-normal`, `--bhds-space-1`, `--bhds-space-4`, `--bhds-space-5`, `--bhds-space-6`.
+- BHDS 1 only: `--bhds-shadow-sm`, `--bhds-font-weight-medium`.
+- BHDS 2 only: `--bhds-shadow-md`, `--bhds-font-weight-semibold`.
+
+**Missing tokens added with sentinel values**
+- None. All tokens existed in `bhds1.css` / `bhds2.css`.
+
+**Relationship between BHDS 1 and BHDS 2**
+- Same API. `Card` takes `surface: "filled" | "outline"` (default `filled`) and `themeOverride`. Sub-components (`CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `CardAction`) read theme + surface from the Card root via `data-theme` / `data-surface` using Tailwind `group-data-*` selectors.
+- The "border-only service tile" from the spec is `<Card surface="outline" />` under BHDS 2. The same prop renders a simpler, unscaled outline card under BHDS 1 so tests and consumers stay consistent.
+
+**Gotchas**
+- Same SSR theme flash as Button: `useTheme()` returns `undefined` before hydration; the wrapper normalizes to `bhds1` for first paint.
+- Compound Tailwind selectors of the form `group-data-[surface=outline]/card:group-data-[theme=bhds2]/card:px-...` must be written in that order (surface then theme) to compile into a single selector. Tailwind v4 handles chaining; if a compiler error appears, split into separate utilities on the element.
+- The `border border-transparent` on filled cards is intentional. It keeps outer geometry identical between filled and outline so layout does not shift when `surface` switches at runtime.
+- CardFooter uses a top border in the filled surface and drops the border + top padding in the outline surface, since outline cards shouldn't grow a dividing line.
+- Sub-components are unstyled server components; only `Card` is a client component (needs `useTheme()`). This mirrors how Button is structured.
+
+**a11y review status**
+- Not yet reviewed. Sentinel colors will fail contrast. After tokens land, check CardTitle, CardDescription, and CardFooter divider contrast in both themes. Verify outline card border contrast against the page background in both themes.
+
+---
