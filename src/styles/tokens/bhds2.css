@@ -1,0 +1,96 @@
+/**
+ * BHDS 2 tokens. Sentinel values use #ff00ff so missing tokens scream.
+ * Replace placeholder values with the real BHDS 2 palette/ramp when provided.
+ * Token names MUST mirror bhds1.css so both variants stay swappable.
+ */
+[data-theme="bhds2"] {
+  /* Color: brand */
+  --bhds-color-brand-primary: #ff00ff;
+  --bhds-color-brand-primary-hover: #ff00ff;
+  --bhds-color-brand-primary-active: #ff00ff;
+  --bhds-color-brand-accent: #ff00ff;
+
+  /* Color: surface */
+  --bhds-color-bg-page: #ff00ff;
+  --bhds-color-bg-surface: #ff00ff;
+  --bhds-color-bg-muted: #ff00ff;
+
+  /* Color: text */
+  --bhds-color-text-primary: #ff00ff;
+  --bhds-color-text-secondary: #ff00ff;
+  --bhds-color-text-inverse: #ff00ff;
+  --bhds-color-text-link: #ff00ff;
+
+  /* Color: border */
+  --bhds-color-border-default: #ff00ff;
+  --bhds-color-border-strong: #ff00ff;
+  --bhds-color-border-focus: #ff00ff;
+
+  /* Color: feedback */
+  --bhds-color-feedback-success: #ff00ff;
+  --bhds-color-feedback-warning: #ff00ff;
+  --bhds-color-feedback-danger: #ff00ff;
+  --bhds-color-feedback-info: #ff00ff;
+
+  /* Typography: family */
+  --bhds-font-family-sans: system-ui, sans-serif;
+  --bhds-font-family-serif: Georgia, serif;
+
+  /* Typography: weight */
+  --bhds-font-weight-regular: 400;
+  --bhds-font-weight-medium: 500;
+  --bhds-font-weight-semibold: 600;
+  --bhds-font-weight-bold: 700;
+
+  /* Typography: size scale */
+  --bhds-font-size-xs: 0.75rem;
+  --bhds-font-size-sm: 0.875rem;
+  --bhds-font-size-md: 1rem;
+  --bhds-font-size-lg: 1.125rem;
+  --bhds-font-size-xl: 1.25rem;
+  --bhds-font-size-2xl: 1.5rem;
+  --bhds-font-size-3xl: 1.875rem;
+  --bhds-font-size-4xl: 2.25rem;
+  --bhds-font-size-5xl: 3rem;
+
+  /* Typography: line height */
+  --bhds-line-height-tight: 1.15;
+  --bhds-line-height-snug: 1.3;
+  --bhds-line-height-normal: 1.5;
+  --bhds-line-height-relaxed: 1.7;
+
+  /* Spacing scale */
+  --bhds-space-0: 0;
+  --bhds-space-1: 0.25rem;
+  --bhds-space-2: 0.5rem;
+  --bhds-space-3: 0.75rem;
+  --bhds-space-4: 1rem;
+  --bhds-space-5: 1.25rem;
+  --bhds-space-6: 1.5rem;
+  --bhds-space-8: 2rem;
+  --bhds-space-10: 2.5rem;
+  --bhds-space-12: 3rem;
+  --bhds-space-16: 4rem;
+  --bhds-space-20: 5rem;
+  --bhds-space-24: 6rem;
+
+  /* Radius. BHDS 2 tends toward softer/larger radii; defaults favor pill/rounded. */
+  --bhds-radius-none: 0;
+  --bhds-radius-sm: 4px;
+  --bhds-radius-md: 8px;
+  --bhds-radius-lg: 16px;
+  --bhds-radius-xl: 24px;
+  --bhds-radius-pill: 9999px;
+  --bhds-radius-button: 9999px;
+  --bhds-radius-card: 16px;
+
+  /* Shadow */
+  --bhds-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --bhds-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.06);
+  --bhds-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.10);
+
+  /* Focus ring */
+  --bhds-focus-ring-width: 2px;
+  --bhds-focus-ring-offset: 2px;
+  --bhds-focus-ring-color: #ff00ff;
+}

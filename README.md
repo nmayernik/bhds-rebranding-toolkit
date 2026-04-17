@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BHDS Showcase
 
-## Getting Started
+Password-protected site that presents BHDS 1 and BHDS 2 side by side for non-technical stakeholder review.
 
-First, run the development server:
+## Local dev
 
 ```bash
+cp .env.example .env.local
+# edit .env.local and set SHOWCASE_PASSWORD
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`. You will be redirected to `/unlock` until you enter the password.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Theming
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Global theme toggle switches `data-theme="bhds1"` ↔ `data-theme="bhds2"` on `<html>` via `next-themes`.
+- Every component ships both variants baked in via `cva`. Consumers write `<Button>Click</Button>`.
+- Components accept an optional `themeOverride` prop for the `/compare` page.
+- Token values live in `src/styles/tokens/bhds1.css` and `bhds2.css`, scoped by `[data-theme="..."]`.
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js App Router + TypeScript
+- Tailwind v4
+- shadcn/ui (Radix primitives, extended with theme variants)
+- `@base-ui/react` for headless primitives where needed
+- `next-themes` for the global toggle, wrapped by `@/lib/useTheme`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/
+    (showcase)/
+      page.tsx            <- tour landing
+      tokens/page.tsx
+      components/page.tsx
+      compare/page.tsx
+    unlock/page.tsx
+    api/unlock/route.ts
+    layout.tsx
+    globals.css
+  components/
+    ui/                   <- shadcn primitives, extended with theme variants
+    chrome/               <- Header, Footer, ThemeToggle, Logo
+    sections/             <- compositions (Value Prop, Big CTA, etc.)
+  lib/
+    useTheme.ts
+  styles/
+    tokens/{bhds1,bhds2}.css
+    theme-provider.tsx
+  middleware.ts
+docs/
+  Component Log.md
+.claude/agents/
+  component-builder.md
+  a11y-reviewer.md
+```
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Set `SHOWCASE_PASSWORD` on Vercel for Production, Preview, and Development environments.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Conventions
+
+- Conventional Commits.
+- Every component gets one entry in `docs/Component Log.md` covering both variants.
+- Never use em dashes. Never use the word "delve".
