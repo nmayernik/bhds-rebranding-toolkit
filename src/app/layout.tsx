@@ -32,7 +32,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>{children}
+        <script src="https://www.inflight.co/widget.js" data-workspace="8688qzp4" async /></ThemeProvider>
       </body>
     </html>
   );
