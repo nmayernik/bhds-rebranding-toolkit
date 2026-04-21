@@ -1,10 +1,64 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+/* BHDS 2 display serif (served from /public) */
+@font-face {
+  font-family: "Horizon Serif";
+  src: url("/Horizon_Serif.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "../styles/tokens/bhds1.css";
 @import "../styles/tokens/bhds2.css";
 
 @custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Playful motion identity */
+  --bhds-motion-ease-playful: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --bhds-motion-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --bhds-motion-fast: 140ms;
+  --bhds-motion-standard: 240ms;
+  --bhds-motion-slow: 420ms;
+}
+
+@keyframes bhds-page-intro {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.985);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(0, -2px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.bhds-page-intro {
+  animation: none !important;
+}
+
+.bhds-page-intro-delay-1 {
+  animation-delay: 0ms !important;
+}
+
+.bhds-page-intro-delay-2 {
+  animation-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bhds-page-intro,
+  .bhds-page-intro-delay-1,
+  .bhds-page-intro-delay-2 {
+    animation: none !important;
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -51,6 +105,8 @@
 }
 
 :root {
+  /* Matches defaultTheme (bhds1) before data-theme is applied */
+  --bhds-font-family-sans: var(--font-mulish), ui-sans-serif, system-ui, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -124,9 +180,31 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
   html {
-    @apply font-sans;
+    font-family: var(--bhds-font-family-sans);
   }
+}
+
+[data-slot="tour-hero"] {
+  max-width: 100% !important;
+}
+
+/* ValuePropServiceGrid: four identical segments; -25% shift = one segment width (seamless loop) */
+@keyframes bhds-value-prop-marquee {
+  to {
+    transform: translate3d(-25%, 0, 0);
+  }
+}
+
+.bhds-marquee-track {
+  animation-name: bhds-value-prop-marquee;
+  animation-duration: var(--bhds-marquee-duration, 24s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.bhds-marquee-track[data-marquee-direction="reverse"] {
+  animation-direction: reverse;
 }

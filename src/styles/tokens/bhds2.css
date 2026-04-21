@@ -1,40 +1,48 @@
 /**
- * BHDS 2 tokens. Sentinel values use #ff00ff so missing tokens scream.
- * Replace placeholder values with the real BHDS 2 palette/ramp when provided.
+ * BHDS 2 tokens. Brand colors remain as `#ff00ff` sentinels so missing-brand is
+ * loud and unmistakable. Infrastructure colors (surfaces, text, borders) use
+ * sensible neutral placeholders so structure is visible before real tokens land.
+ * Surfaces pick a subtly warmer neutral vs BHDS 1 so the two themes don't look identical.
  * Token names MUST mirror bhds1.css so both variants stay swappable.
  */
 [data-theme="bhds2"] {
-  /* Color: brand */
-  --bhds-color-brand-primary: #ff00ff;
-  --bhds-color-brand-primary-hover: #ff00ff;
-  --bhds-color-brand-primary-active: #ff00ff;
-  --bhds-color-brand-accent: #ff00ff;
+  /* Color: brand (sourced from theme/action-primary-background-*) */
+  --bhds-color-brand-primary: #ffcb00;
+  --bhds-color-brand-primary-hover: #ffd533;
+  --bhds-color-brand-primary-active: #ffcb00;
+  --bhds-color-brand-accent: #16488e;
 
   /* Color: surface */
-  --bhds-color-bg-page: #ff00ff;
-  --bhds-color-bg-surface: #ff00ff;
-  --bhds-color-bg-muted: #ff00ff;
+  --bhds-color-bg-page: #ffffff;
+  --bhds-color-bg-surface: #ffffff;
+  --bhds-color-bg-muted: #f4f3f0;
+  /* Primitive gray-25 */
+  --bhds-color-gray-25: #faf9f8;
 
   /* Color: text */
-  --bhds-color-text-primary: #ff00ff;
-  --bhds-color-text-secondary: #ff00ff;
-  --bhds-color-text-inverse: #ff00ff;
-  --bhds-color-text-link: #ff00ff;
+  --bhds-color-text-primary: #3b382b;
+  --bhds-color-text-secondary: #585441;
+  --bhds-color-text-inverse: #ffffff;
+  --bhds-color-text-link: #16488e;
 
   /* Color: border */
-  --bhds-color-border-default: #ff00ff;
-  --bhds-color-border-strong: #ff00ff;
-  --bhds-color-border-focus: #ff00ff;
+  --bhds-color-border-default: #d3cfbd;
+  --bhds-color-border-strong: #bebaa7;
+  --bhds-color-border-focus: #16488e;
+
+  /* Secondary outline button hover (navy-50) */
+  --bhds-color-secondary-button-hover-bg: #e9f1fc;
 
   /* Color: feedback */
-  --bhds-color-feedback-success: #ff00ff;
-  --bhds-color-feedback-warning: #ff00ff;
-  --bhds-color-feedback-danger: #ff00ff;
-  --bhds-color-feedback-info: #ff00ff;
+  --bhds-color-feedback-success: #36692f;
+  --bhds-color-feedback-warning: #998700;
+  --bhds-color-feedback-danger: #c93623;
+  --bhds-color-feedback-info: #16488e;
 
   /* Typography: family */
-  --bhds-font-family-sans: system-ui, sans-serif;
-  --bhds-font-family-serif: Georgia, serif;
+  --bhds-font-family-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  /* Headlines / display serif (see public/Horizon_Serif.woff2 + @font-face in globals.css) */
+  --bhds-font-family-serif: "Horizon Serif", Georgia, "Times New Roman", serif;
 
   /* Typography: weight */
   --bhds-font-weight-regular: 400;
@@ -74,7 +82,7 @@
   --bhds-space-20: 5rem;
   --bhds-space-24: 6rem;
 
-  /* Radius. BHDS 2 tends toward softer/larger radii; defaults favor pill/rounded. */
+  /* Radius. BHDS 2 leans softer / larger; buttons are pill-shaped. */
   --bhds-radius-none: 0;
   --bhds-radius-sm: 4px;
   --bhds-radius-md: 8px;
@@ -92,5 +100,5 @@
   /* Focus ring */
   --bhds-focus-ring-width: 2px;
   --bhds-focus-ring-offset: 2px;
-  --bhds-focus-ring-color: #ff00ff;
+  --bhds-focus-ring-color: #16488e;
 }

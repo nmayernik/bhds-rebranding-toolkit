@@ -15,7 +15,7 @@ export default async function UnlockPage({
         className="w-full max-w-sm flex flex-col gap-4 p-6 rounded-lg border border-neutral-200 bg-white"
       >
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold">BHDS Showcase</h1>
+          <h1 className="text-xl font-semibold">BHDS Rebranding Toolkit</h1>
           <p className="text-sm text-neutral-600">Enter the shared password to continue.</p>
         </div>
 

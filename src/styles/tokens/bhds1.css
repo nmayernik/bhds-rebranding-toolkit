@@ -1,38 +1,54 @@
 /**
- * BHDS 1 tokens. Sentinel values use #ff00ff so missing tokens scream.
+ * BHDS 1 tokens. Brand colors remain as `#ff00ff` sentinels so missing-brand is
+ * loud and unmistakable. Infrastructure colors (surfaces, text, borders) use
+ * sensible neutral placeholders so structure is visible before real tokens land.
  * Replace placeholder values with the real BHDS 1 palette/ramp when provided.
  */
 [data-theme="bhds1"] {
-  /* Color: brand */
-  --bhds-color-brand-primary: #ff00ff;
-  --bhds-color-brand-primary-hover: #ff00ff;
-  --bhds-color-brand-primary-active: #ff00ff;
-  --bhds-color-brand-accent: #ff00ff;
+  /* Color: brand (sourced from theme/action-primary-background-*) */
+  --bhds-color-brand-primary: #f0bd1b;
+  --bhds-color-brand-primary-hover: #f2c840;
+  --bhds-color-brand-primary-active: #f0bd1b;
+  --bhds-color-brand-accent: #1a475f;
 
   /* Color: surface */
-  --bhds-color-bg-page: #ff00ff;
-  --bhds-color-bg-surface: #ff00ff;
-  --bhds-color-bg-muted: #ff00ff;
+  --bhds-color-bg-page: #ffffff;
+  --bhds-color-bg-surface: #ffffff;
+  --bhds-color-bg-muted: #f2f2f2;
+  /* Primitive gray-25 / gray-100 */
+  --bhds-color-gray-25: #fafafa;
+  --bhds-color-gray-100: #dddddd;
+
+  /* Aligns with Figma common-white / blue-50 */
+  --bhds-color-common-white: #ffffff;
+  --bhds-color-blue-50: #ebf4fa;
+  /* Primitive color-blue-800 — BHDS ramp (not Tailwind default blue-800) */
+  --bhds-color-blue-800: #1a475f;
+  --bhds-gradient-value-prop-section: linear-gradient(
+    45deg,
+    var(--bhds-color-common-white, #fff) 0%,
+    var(--bhds-color-blue-50, #ebf4fa) 100%
+  );
 
   /* Color: text */
-  --bhds-color-text-primary: #ff00ff;
-  --bhds-color-text-secondary: #ff00ff;
-  --bhds-color-text-inverse: #ff00ff;
-  --bhds-color-text-link: #ff00ff;
+  --bhds-color-text-primary: #333333;
+  --bhds-color-text-secondary: #464646;
+  --bhds-color-text-inverse: #ffffff;
+  --bhds-color-text-link: #205978;
 
   /* Color: border */
-  --bhds-color-border-default: #ff00ff;
-  --bhds-color-border-strong: #ff00ff;
-  --bhds-color-border-focus: #ff00ff;
+  --bhds-color-border-default: #c8c8c8;
+  --bhds-color-border-strong: #b3b3b3;
+  --bhds-color-border-focus: #205978;
 
   /* Color: feedback */
-  --bhds-color-feedback-success: #ff00ff;
-  --bhds-color-feedback-warning: #ff00ff;
-  --bhds-color-feedback-danger: #ff00ff;
-  --bhds-color-feedback-info: #ff00ff;
+  --bhds-color-feedback-success: #476830;
+  --bhds-color-feedback-warning: #907009;
+  --bhds-color-feedback-danger: #8e0b0b;
+  --bhds-color-feedback-info: #205978;
 
   /* Typography: family */
-  --bhds-font-family-sans: system-ui, sans-serif;
+  --bhds-font-family-sans: var(--font-mulish), ui-sans-serif, system-ui, sans-serif;
   --bhds-font-family-serif: Georgia, serif;
 
   /* Typography: weight */
@@ -73,14 +89,14 @@
   --bhds-space-20: 5rem;
   --bhds-space-24: 6rem;
 
-  /* Radius */
+  /* Radius. BHDS 1: 8px button corners; modest card radii. */
   --bhds-radius-none: 0;
   --bhds-radius-sm: 2px;
   --bhds-radius-md: 4px;
   --bhds-radius-lg: 8px;
   --bhds-radius-xl: 12px;
   --bhds-radius-pill: 9999px;
-  --bhds-radius-button: 4px;
+  --bhds-radius-button: 8px;
   --bhds-radius-card: 8px;
 
   /* Shadow */
@@ -91,5 +107,5 @@
   /* Focus ring */
   --bhds-focus-ring-width: 2px;
   --bhds-focus-ring-offset: 2px;
-  --bhds-focus-ring-color: #ff00ff;
+  --bhds-focus-ring-color: #205978;
 }

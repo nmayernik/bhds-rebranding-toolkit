@@ -9,17 +9,25 @@ import { useTheme, type BhdsTheme } from "@/lib/useTheme";
 const cardVariants = cva(
   [
     "group/card flex flex-col overflow-hidden",
+    "[font-family:var(--bhds-font-family-sans)]",
     "gap-[var(--bhds-space-4)]",
     "py-[var(--bhds-space-4)]",
-    "[color:var(--bhds-color-text-primary)]",
-    "[font-size:var(--bhds-font-size-sm)]",
-    "transition-colors",
+    "text-[var(--bhds-color-text-primary)]",
+    "text-[length:var(--bhds-font-size-sm)]",
+    "transition-[transform,box-shadow,background-color,border-color,color] duration-300",
+    "[transition-timing-function:var(--bhds-motion-ease-soft)]",
+    "motion-reduce:transition-none motion-reduce:transform-none",
+    "will-change-transform",
+    "hover:-translate-y-1 hover:rotate-[0.15deg] hover:scale-[1.01]",
+    "active:translate-y-0 active:rotate-0 active:scale-100",
+    "motion-reduce:hover:translate-y-0 motion-reduce:hover:rotate-0 motion-reduce:hover:scale-100",
+    "motion-reduce:active:translate-y-0 motion-reduce:active:rotate-0 motion-reduce:active:scale-100",
   ].join(" "),
   {
     variants: {
       theme: {
-        bhds1: ["rounded-[var(--bhds-radius-card)]"].join(" "),
-        bhds2: ["rounded-[var(--bhds-radius-card)]"].join(" "),
+        bhds1: "rounded-[var(--bhds-radius-card)]",
+        bhds2: "rounded-[var(--bhds-radius-card)]",
       },
       surface: {
         filled: [
@@ -33,18 +41,16 @@ const cardVariants = cva(
       },
     },
     compoundVariants: [
-      // Filled cards carry brand shadows. Outline / service-tile cards stay flat.
       {
         theme: "bhds1",
         surface: "filled",
-        class: "[box-shadow:var(--bhds-shadow-sm)]",
+        class: "shadow-[var(--bhds-shadow-sm)] hover:shadow-[var(--bhds-shadow-md)]",
       },
       {
         theme: "bhds2",
         surface: "filled",
-        class: "[box-shadow:var(--bhds-shadow-md)]",
+        class: "shadow-[var(--bhds-shadow-md)] hover:shadow-[var(--bhds-shadow-lg)]",
       },
-      // BHDS 2 service tile: more generous internal padding ramp.
       {
         theme: "bhds2",
         surface: "outline",
@@ -99,12 +105,9 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "[font-size:var(--bhds-font-size-lg)]",
-        "[line-height:var(--bhds-line-height-snug)]",
-        "[color:var(--bhds-color-text-primary)]",
-        // BHDS 1 titles: medium. BHDS 2 titles: semibold.
-        "group-data-[theme=bhds1]/card:[font-weight:var(--bhds-font-weight-medium)]",
-        "group-data-[theme=bhds2]/card:[font-weight:var(--bhds-font-weight-semibold)]",
+        "text-[length:var(--bhds-font-size-lg)] leading-[var(--bhds-line-height-snug)] text-[var(--bhds-color-text-primary)]",
+        "group-data-[theme=bhds1]/card:font-medium",
+        "group-data-[theme=bhds2]/card:font-semibold",
         className
       )}
       {...props}
@@ -117,9 +120,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-description"
       className={cn(
-        "[font-size:var(--bhds-font-size-sm)]",
-        "[color:var(--bhds-color-text-secondary)]",
-        "[line-height:var(--bhds-line-height-normal)]",
+        "text-[length:var(--bhds-font-size-sm)] text-[var(--bhds-color-text-secondary)] leading-[var(--bhds-line-height-normal)]",
         className
       )}
       {...props}

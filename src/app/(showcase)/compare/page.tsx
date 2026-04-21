@@ -1,3 +1,5 @@
+import { BigCta } from "@/components/sections/BigCta";
+import { ValuePropServiceGrid } from "@/components/sections/ValuePropServiceGrid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,11 +9,61 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Logo } from "@/components/ui/logo";
+import { cn } from "@/lib/utils";
 
 type Theme = "bhds1" | "bhds2";
 
 const intents = ["primary", "secondary"] as const;
-const sizes = ["md", "lg"] as const;
+
+function LogoSwatch({
+  label,
+  onDark,
+  children,
+}: {
+  label: string;
+  onDark?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs uppercase tracking-wider text-neutral-500">{label}</span>
+      <div
+        className={cn(
+          "flex min-h-20 flex-wrap items-center gap-6 rounded-md p-4",
+          onDark ? "bg-neutral-900" : "bg-white"
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function LogoMatrix({ themeOverride }: { themeOverride: Theme }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <LogoSwatch label="horizontal — blue">
+        <Logo themeOverride={themeOverride} variant="horizontal" tone="blue" />
+      </LogoSwatch>
+      <LogoSwatch label="horizontal — white" onDark>
+        <Logo themeOverride={themeOverride} variant="horizontal" tone="white" />
+      </LogoSwatch>
+      <LogoSwatch label="stacked — blue">
+        <Logo themeOverride={themeOverride} variant="stacked" tone="blue" />
+      </LogoSwatch>
+      <LogoSwatch label="stacked — white" onDark>
+        <Logo themeOverride={themeOverride} variant="stacked" tone="white" />
+      </LogoSwatch>
+      <LogoSwatch label="icon — blue">
+        <Logo themeOverride={themeOverride} variant="icon" tone="blue" />
+      </LogoSwatch>
+      <LogoSwatch label="icon — white" onDark>
+        <Logo themeOverride={themeOverride} variant="icon" tone="white" />
+      </LogoSwatch>
+    </div>
+  );
+}
 
 function ButtonMatrix({ themeOverride }: { themeOverride: Theme }) {
   return (
@@ -19,13 +71,9 @@ function ButtonMatrix({ themeOverride }: { themeOverride: Theme }) {
       {intents.map((intent) => (
         <div key={intent} className="flex flex-col gap-2">
           <span className="text-xs uppercase tracking-wider text-neutral-500">{intent}</span>
-          <div className="flex flex-col items-start gap-2">
-            {sizes.map((size) => (
-              <Button key={size} themeOverride={themeOverride} intent={intent} size={size}>
-                {intent} / {size}
-              </Button>
-            ))}
-          </div>
+          <Button themeOverride={themeOverride} intent={intent} size="md">
+            {intent === "primary" ? "Primary" : "Secondary"}
+          </Button>
         </div>
       ))}
     </div>
@@ -87,30 +135,72 @@ export default function ComparePage() {
         </p>
       </header>
 
+      <section aria-labelledby="cmp-logo" className="mb-12 flex flex-col gap-4">
+        <h2 id="cmp-logo" className="text-xl font-semibold">Logo</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
+            <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
+            <LogoMatrix themeOverride="bhds1" />
+          </div>
+          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
+            <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
+            <LogoMatrix themeOverride="bhds2" />
+          </div>
+        </div>
+      </section>
+
       <section aria-labelledby="cmp-button" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-button" className="text-xl font-semibold">Button</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 p-6 bg-[var(--bhds-color-bg-page)]">
+          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <ButtonMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 p-6 bg-[var(--bhds-color-bg-page)]">
+          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <ButtonMatrix themeOverride="bhds2" />
           </div>
         </div>
       </section>
 
-      <section aria-labelledby="cmp-card" className="flex flex-col gap-4">
+      <section aria-labelledby="cmp-card" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-card" className="text-xl font-semibold">Card</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 p-6 bg-[var(--bhds-color-bg-page)]">
+          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <CardMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 p-6 bg-[var(--bhds-color-bg-page)]">
+          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)] p-6">
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <CardMatrix themeOverride="bhds2" />
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="cmp-vpsg" className="mb-12 flex flex-col gap-4">
+        <h2 id="cmp-vpsg" className="text-xl font-semibold">Value Prop + Service Grid</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div data-theme="bhds1" className="overflow-hidden rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)]">
+            <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 1</h3></div>
+            <ValuePropServiceGrid themeOverride="bhds1" />
+          </div>
+          <div data-theme="bhds2" className="overflow-hidden rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)]">
+            <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 2</h3></div>
+            <ValuePropServiceGrid themeOverride="bhds2" />
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="cmp-bigcta" className="flex flex-col gap-4">
+        <h2 id="cmp-bigcta" className="text-xl font-semibold">Big CTA</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div data-theme="bhds1" className="overflow-hidden rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)]">
+            <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 1</h3></div>
+            <BigCta themeOverride="bhds1" />
+          </div>
+          <div data-theme="bhds2" className="overflow-hidden rounded-lg border border-neutral-200 bg-[var(--bhds-color-gray-25)]">
+            <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 2</h3></div>
+            <BigCta themeOverride="bhds2" />
           </div>
         </div>
       </section>
