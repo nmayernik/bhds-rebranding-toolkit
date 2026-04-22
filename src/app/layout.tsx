@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Mulish } from "next/font/google";
+import { Figtree, Inter, Mulish } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/styles/theme-provider";
 
@@ -12,6 +12,12 @@ const fontMulish = Mulish({
 const fontFigtree = Figtree({
   subsets: ["latin"],
   variable: "--font-figtree",
+  display: "swap",
+});
+
+const fontInter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -28,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fontMulish.variable} ${fontFigtree.variable} h-full antialiased`}
+      className={`${fontMulish.variable} ${fontFigtree.variable} ${fontInter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
