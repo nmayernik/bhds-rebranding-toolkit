@@ -3,10 +3,16 @@ export type Coords = {
   y: number;
 };
 
+export type AnchorSub = {
+  path: string;
+  label?: string;
+};
+
 export type Anchor = {
   id: string;
   label?: string;
   offset: Coords;
+  sub?: AnchorSub | null;
 };
 
 export type Reply = {

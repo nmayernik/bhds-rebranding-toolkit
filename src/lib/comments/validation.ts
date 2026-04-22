@@ -1,9 +1,13 @@
-import type { Anchor } from "./types";
+import type { Anchor, AnchorSub } from "./types";
 
 export const MAX_BODY_LENGTH = 2000;
 export const MAX_AUTHOR_LENGTH = 200;
 export const MAX_ANCHOR_ID_LENGTH = 200;
 export const MAX_ANCHOR_LABEL_LENGTH = 200;
+export const MAX_ANCHOR_SUB_PATH_LENGTH = 500;
+
+// Only the shapes we generate client-side: tag names, :nth-of-type(n), >, whitespace.
+const SUB_PATH_REGEX = /^[A-Za-z][A-Za-z0-9\s:()>_-]*$/;
 
 export function sanitizeBody(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
@@ -52,5 +56,25 @@ export function sanitizeAnchor(raw: unknown): Anchor | null {
     if (trimmed) label = trimmed.slice(0, MAX_ANCHOR_LABEL_LENGTH);
   }
 
-  return { id, label, offset: { x: ox, y: oy } };
+  const sub = sanitizeAnchorSub(obj.sub);
+
+  return { id, label, offset: { x: ox, y: oy }, sub };
+}
+
+export function sanitizeAnchorSub(raw: unknown): AnchorSub | null {
+  if (raw == null) return null;
+  if (typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+
+  const path = typeof obj.path === "string" ? obj.path.trim() : "";
+  if (!path || path.length > MAX_ANCHOR_SUB_PATH_LENGTH) return null;
+  if (!SUB_PATH_REGEX.test(path)) return null;
+
+  let label: string | undefined;
+  if (typeof obj.label === "string") {
+    const trimmed = obj.label.trim();
+    if (trimmed) label = trimmed.slice(0, MAX_ANCHOR_LABEL_LENGTH);
+  }
+
+  return { path, label };
 }

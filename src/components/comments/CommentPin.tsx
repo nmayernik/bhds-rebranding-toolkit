@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CornerDownRight, RotateCcw, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Comment } from "@/lib/comments/types";
-import { AnchorOutline, cssEscape } from "./anchorUtils";
+import { AnchorOutline, resolveAnchorRect } from "./anchorUtils";
 import { CommentComposer } from "./CommentComposer";
 import { useComments } from "./CommentsProvider";
 
@@ -15,19 +15,26 @@ type Props = {
   surfaceHeight: number;
 };
 
-function usePinPosition(
+const HOVER_HIDE_DELAY_MS = 180;
+const HOVER_SHOW_DELAY_MS = 60;
+
+type Resolved = {
+  position: { x: number; y: number };
+  rect: DOMRect | null;
+  label?: string;
+};
+
+function useResolvedAnchor(
   comment: Comment,
   surfaceWidth: number,
   surfaceHeight: number
-): { x: number; y: number } {
+): Resolved {
   const anchorId = comment.anchor?.id;
 
-  // surfaceWidth/Height change on resize and cause re-renders; also listen to
-  // scroll so getBoundingClientRect results are fresh on sticky layouts.
-  const [scrollTick, setScrollTick] = useState(0);
+  const [, setTick] = useState(0);
   useEffect(() => {
     if (!anchorId) return;
-    const bump = () => setScrollTick((n) => n + 1);
+    const bump = () => setTick((n) => n + 1);
     window.addEventListener("scroll", bump, { passive: true });
     window.addEventListener("resize", bump);
     return () => {
@@ -35,36 +42,36 @@ function usePinPosition(
       window.removeEventListener("resize", bump);
     };
   }, [anchorId]);
-  void scrollTick;
-
-  if (!anchorId || !comment.anchor) return comment.coords;
-  if (typeof document === "undefined") return comment.coords;
-
-  const surface = document.querySelector<HTMLElement>("[data-comment-surface]");
-  if (!surface) return comment.coords;
-  const anchorEl = surface.querySelector<HTMLElement>(
-    `[data-comment-anchor="${cssEscape(anchorId)}"]`
-  );
-  if (!anchorEl) return comment.coords;
-
-  const surfaceRect = surface.getBoundingClientRect();
-  const anchorRect = anchorEl.getBoundingClientRect();
-  if (
-    surfaceRect.width === 0 ||
-    surfaceRect.height === 0 ||
-    anchorRect.width === 0 ||
-    anchorRect.height === 0
-  ) {
-    return comment.coords;
-  }
   void surfaceWidth;
   void surfaceHeight;
 
-  const pinX = anchorRect.left + comment.anchor.offset.x * anchorRect.width;
-  const pinY = anchorRect.top + comment.anchor.offset.y * anchorRect.height;
+  if (!comment.anchor) {
+    return { position: comment.coords, rect: null };
+  }
+  if (typeof document === "undefined") {
+    return { position: comment.coords, rect: null };
+  }
+
+  const surface = document.querySelector<HTMLElement>("[data-comment-surface]");
+  if (!surface) return { position: comment.coords, rect: null };
+
+  const resolved = resolveAnchorRect(surface, comment.anchor);
+  if (!resolved) return { position: comment.coords, rect: null };
+
+  const surfaceRect = surface.getBoundingClientRect();
+  if (surfaceRect.width === 0 || surfaceRect.height === 0) {
+    return { position: comment.coords, rect: resolved.rect, label: resolved.label };
+  }
+
+  const pinX = resolved.rect.left + comment.anchor.offset.x * resolved.rect.width;
+  const pinY = resolved.rect.top + comment.anchor.offset.y * resolved.rect.height;
   return {
-    x: (pinX - surfaceRect.left) / surfaceRect.width,
-    y: (pinY - surfaceRect.top) / surfaceRect.height,
+    position: {
+      x: (pinX - surfaceRect.left) / surfaceRect.width,
+      y: (pinY - surfaceRect.top) / surfaceRect.height,
+    },
+    rect: resolved.rect,
+    label: resolved.label,
   };
 }
 
@@ -96,14 +103,55 @@ export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
   const { activeCommentId, setActiveComment, addReply, resolve, remove, commentModeEnabled } =
     useComments();
   const [replyingValue, setReplyingValue] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
-  const isOpen = activeCommentId === comment.id;
-  const position = usePinPosition(comment, surfaceWidth, surfaceHeight);
+  const hideTimerRef = useRef<number | null>(null);
+  const showTimerRef = useRef<number | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (hideTimerRef.current !== null) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    if (showTimerRef.current !== null) {
+      window.clearTimeout(showTimerRef.current);
+      showTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleShow = useCallback(() => {
+    if (hideTimerRef.current !== null) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    if (showTimerRef.current !== null) return;
+    showTimerRef.current = window.setTimeout(() => {
+      showTimerRef.current = null;
+      setPreviewOpen(true);
+    }, HOVER_SHOW_DELAY_MS);
+  }, []);
+
+  const scheduleHide = useCallback(() => {
+    if (showTimerRef.current !== null) {
+      window.clearTimeout(showTimerRef.current);
+      showTimerRef.current = null;
+    }
+    if (hideTimerRef.current !== null) return;
+    hideTimerRef.current = window.setTimeout(() => {
+      hideTimerRef.current = null;
+      setPreviewOpen(false);
+    }, HOVER_HIDE_DELAY_MS);
+  }, []);
+
+  useEffect(() => () => clearTimers(), [clearTimers]);
+
+  const isActive = activeCommentId === comment.id;
+  const isOpen = isActive || previewOpen;
+  const resolved = useResolvedAnchor(comment, surfaceWidth, surfaceHeight);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isActive) return;
     const onClick = (e: MouseEvent) => {
       if (!cardRef.current) return;
       const target = e.target as Node | null;
@@ -119,44 +167,56 @@ export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
     };
     window.addEventListener("mousedown", onClick);
     return () => window.removeEventListener("mousedown", onClick);
-  }, [isOpen, setActiveComment]);
+  }, [isActive, setActiveComment]);
+
+  // Close preview if the user clicks anywhere outside the pin/card.
+  useEffect(() => {
+    if (!previewOpen) return;
+    const onDown = () => {
+      if (!isActive) setPreviewOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [previewOpen, isActive]);
 
   const accent = useMemo(() => colorFor(comment.author), [comment.author]);
   const flipLeft =
-    surfaceWidth > 0 && position.x * surfaceWidth + 320 > surfaceWidth - 16;
+    surfaceWidth > 0 && resolved.position.x * surfaceWidth + 320 > surfaceWidth - 16;
 
   const surfaceEl =
     typeof document === "undefined"
       ? null
       : document.querySelector<HTMLElement>("[data-comment-surface]");
   const surfaceRect = surfaceEl?.getBoundingClientRect() ?? null;
-  const showOutline = Boolean(comment.anchor) && (isOpen || hovered);
+  const showOutline =
+    Boolean(comment.anchor) && Boolean(resolved.rect) && (isActive || previewOpen);
 
   return (
     <>
-      {showOutline && comment.anchor && surfaceEl && surfaceRect && (
+      {showOutline && resolved.rect && surfaceRect && (
         <AnchorOutline
-          anchorId={comment.anchor.id}
-          label={comment.anchor.label}
-          surface={surfaceEl}
+          rect={resolved.rect}
           surfaceRect={surfaceRect}
-          variant={isOpen ? "active" : "muted"}
+          label={resolved.label}
+          variant={isActive ? "active" : "muted"}
         />
       )}
       <div
         className="absolute z-30"
         style={{
-          left: `${position.x * 100}%`,
-          top: `${position.y * 100}%`,
+          left: `${resolved.position.x * 100}%`,
+          top: `${resolved.position.y * 100}%`,
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={scheduleShow}
+        onMouseLeave={scheduleHide}
       >
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          setActiveComment(isOpen ? null : comment.id);
+          clearTimers();
+          setPreviewOpen(false);
+          setActiveComment(isActive ? null : comment.id);
         }}
         aria-label={`Comment by ${comment.author}`}
         className={cn(
@@ -164,9 +224,9 @@ export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
           "text-[11px] font-bold text-white shadow-lg shadow-neutral-900/20 ring-2 ring-white",
           "transition-transform duration-150 [transition-timing-function:var(--bhds-motion-ease-soft)]",
           "hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bhds-focus-ring-color)]",
-          isOpen && "scale-110",
+          isActive && "scale-110",
           comment.resolved && "opacity-60",
-          commentModeEnabled && !isOpen && "opacity-70"
+          commentModeEnabled && !isActive && "opacity-70"
         )}
         style={{ backgroundColor: accent }}
       >
@@ -181,56 +241,61 @@ export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
         <div
           ref={cardRef}
           onClick={(e) => e.stopPropagation()}
+          onMouseEnter={scheduleShow}
+          onMouseLeave={scheduleHide}
           className={cn(
             "absolute top-2 w-[320px] max-w-[calc(100vw-2rem)]",
             flipLeft ? "right-4" : "left-4",
             "rounded-2xl border border-white/10 bg-neutral-900/95 p-3 shadow-xl shadow-neutral-950/40 backdrop-blur-md",
-            "[font-family:var(--font-inter)] text-white"
+            "[font-family:var(--font-inter)] text-white",
+            !isActive && "pointer-events-auto"
           )}
         >
           <Thread comment={comment} accent={accent} />
 
-          <div className="mt-2 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => void resolve(comment.id, !comment.resolved)}
-                className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-neutral-400 hover:bg-white/5 hover:text-white"
-              >
-                {comment.resolved ? (
-                  <>
-                    <RotateCcw className="size-3" aria-hidden />
-                    Reopen
-                  </>
-                ) : (
-                  <>
-                    <Check className="size-3" aria-hidden />
-                    Resolve
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => void remove(comment.id)}
-                className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-neutral-400 hover:bg-red-500/15 hover:text-red-400"
-              >
-                <Trash2 className="size-3" aria-hidden />
-                Delete
-              </button>
+          {isActive && (
+            <div className="mt-2 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => void resolve(comment.id, !comment.resolved)}
+                  className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-neutral-400 hover:bg-white/5 hover:text-white"
+                >
+                  {comment.resolved ? (
+                    <>
+                      <RotateCcw className="size-3" aria-hidden />
+                      Reopen
+                    </>
+                  ) : (
+                    <>
+                      <Check className="size-3" aria-hidden />
+                      Resolve
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void remove(comment.id)}
+                  className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-neutral-400 hover:bg-red-500/15 hover:text-red-400"
+                >
+                  <Trash2 className="size-3" aria-hidden />
+                  Delete
+                </button>
+              </div>
+              {!replyingValue && (
+                <button
+                  type="button"
+                  onClick={() => setReplyingValue(true)}
+                  className="inline-flex h-7 items-center gap-1 rounded-full bg-white px-2.5 text-[11px] font-semibold text-neutral-900 hover:bg-neutral-100"
+                >
+                  <CornerDownRight className="size-3" aria-hidden />
+                  Reply
+                </button>
+              )}
             </div>
-            {!replyingValue && (
-              <button
-                type="button"
-                onClick={() => setReplyingValue(true)}
-                className="inline-flex h-7 items-center gap-1 rounded-full bg-white px-2.5 text-[11px] font-semibold text-neutral-900 hover:bg-neutral-100"
-              >
-                <CornerDownRight className="size-3" aria-hidden />
-                Reply
-              </button>
-            )}
-          </div>
+          )}
 
-          {replyingValue && (
+          {isActive && replyingValue && (
             <div className="mt-2">
               <CommentComposer
                 onSubmit={(body) => {
@@ -244,6 +309,12 @@ export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
                 placeholder="Write a reply…"
                 variant="inline"
               />
+            </div>
+          )}
+
+          {!isActive && (
+            <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 text-[10px] uppercase tracking-wide text-neutral-500">
+              <span>Click to reply or resolve</span>
             </div>
           )}
         </div>

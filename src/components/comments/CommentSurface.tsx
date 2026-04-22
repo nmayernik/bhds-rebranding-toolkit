@@ -5,48 +5,14 @@ import { createPortal } from "react-dom";
 
 import type { Anchor } from "@/lib/comments/types";
 import { cn } from "@/lib/utils";
-import { AnchorOutline, cssEscape } from "./anchorUtils";
+import {
+  AnchorOutline,
+  resolveAnchorAtPoint,
+  resolveAnchorRect,
+} from "./anchorUtils";
 import { CommentComposer } from "./CommentComposer";
 import { CommentPin } from "./CommentPin";
 import { useComments } from "./CommentsProvider";
-
-type AnchorResolution = {
-  anchor: Anchor;
-  rect: DOMRect;
-};
-
-function resolveAnchorForPoint(
-  root: HTMLElement,
-  clientX: number,
-  clientY: number
-): AnchorResolution | null {
-  const stack = document.elementsFromPoint(clientX, clientY);
-  for (const node of stack) {
-    if (!(node instanceof HTMLElement)) continue;
-    if (!root.contains(node)) continue;
-    const el = node.closest<HTMLElement>("[data-comment-anchor]");
-    if (!el || !root.contains(el)) continue;
-    const id = el.dataset.commentAnchor;
-    if (!id) continue;
-    const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) continue;
-    const offsetX = (clientX - rect.left) / rect.width;
-    const offsetY = (clientY - rect.top) / rect.height;
-    const label = el.dataset.commentAnchorLabel ?? el.getAttribute("aria-label") ?? undefined;
-    return {
-      anchor: {
-        id,
-        label,
-        offset: {
-          x: Math.max(0, Math.min(1, offsetX)),
-          y: Math.max(0, Math.min(1, offsetY)),
-        },
-      },
-      rect,
-    };
-  }
-  return null;
-}
 
 function useSurfaceElement() {
   const [el, setEl] = useState<HTMLElement | null>(null);
@@ -56,6 +22,11 @@ function useSurfaceElement() {
   }, []);
   return el;
 }
+
+type HoverPreview = {
+  anchor: Anchor;
+  rect: DOMRect;
+};
 
 export function CommentSurface() {
   const surface = useSurfaceElement();
@@ -68,8 +39,9 @@ export function CommentSurface() {
     submitDraft,
   } = useComments();
 
-  const overlayRef = useRef<HTMLDivElement | null>(null);
   const [tick, setTick] = useState(0);
+  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!surface) return;
@@ -85,6 +57,10 @@ export function CommentSurface() {
     };
   }, [surface]);
 
+  useEffect(() => {
+    if (!commentModeEnabled) setHoverPreview(null);
+  }, [commentModeEnabled]);
+
   if (!surface) return null;
 
   const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -97,7 +73,7 @@ export function CommentSurface() {
     const x = Math.max(0, Math.min(1, localX / rect.width));
     const y = Math.max(0, Math.min(1, localY / rect.height));
 
-    const resolved = resolveAnchorForPoint(surface, e.clientX, e.clientY);
+    const resolved = resolveAnchorAtPoint(surface, e.clientX, e.clientY);
 
     placeDraft({
       coords: { x, y },
@@ -105,6 +81,32 @@ export function CommentSurface() {
       clientY: localY,
       anchor: resolved?.anchor ?? null,
     });
+    setHoverPreview(null);
+  };
+
+  const handleSurfaceMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!commentModeEnabled) return;
+    if (draft) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    if (rafRef.current !== null) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      const resolved = resolveAnchorAtPoint(surface, clientX, clientY);
+      if (!resolved) {
+        setHoverPreview(null);
+        return;
+      }
+      setHoverPreview({ anchor: resolved.anchor, rect: resolved.leafRect });
+    });
+  };
+
+  const handleSurfaceLeave = () => {
+    if (rafRef.current !== null) {
+      window.cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    setHoverPreview(null);
   };
 
   const surfaceRect = surface.getBoundingClientRect();
@@ -114,9 +116,14 @@ export function CommentSurface() {
   // Re-read on each tick (scroll/resize) so draft anchor follows its element.
   void tick;
 
+  const draftRect =
+    draft && draft.anchor ? resolveAnchorRect(surface, draft.anchor) : null;
   const draftPosition = draft
-    ? resolvePosition(surface, surfaceRect, draft.anchor, draft.coords)
+    ? computePinPosition(surfaceRect, draft.anchor, draftRect?.rect, draft.coords)
     : null;
+
+  const hoverLabel =
+    hoverPreview?.anchor.sub?.label ?? hoverPreview?.anchor.label;
 
   return createPortal(
     <>
@@ -131,8 +138,10 @@ export function CommentSurface() {
 
       {commentModeEnabled && (
         <div
-          ref={overlayRef}
+          data-comment-overlay="true"
           onClick={handleSurfaceClick}
+          onMouseMove={handleSurfaceMove}
+          onMouseLeave={handleSurfaceLeave}
           className={cn(
             "absolute inset-0 z-30 cursor-crosshair",
             "bg-[var(--bhds-color-brand-primary)]/[0.03]"
@@ -141,12 +150,23 @@ export function CommentSurface() {
         />
       )}
 
-      {draft && draft.anchor && (
+      {/* Live hover outline while in placement mode */}
+      {commentModeEnabled && !draft && hoverPreview && (
         <AnchorOutline
-          anchorId={draft.anchor.id}
-          label={draft.anchor.label}
-          surface={surface}
+          rect={hoverPreview.rect}
           surfaceRect={surfaceRect}
+          label={hoverLabel}
+          variant="hover"
+        />
+      )}
+
+      {/* Draft outline while composing */}
+      {draft && draft.anchor && draftRect && (
+        <AnchorOutline
+          rect={draftRect.rect}
+          surfaceRect={surfaceRect}
+          label={draftRect.label}
+          variant="active"
         />
       )}
 
@@ -174,30 +194,22 @@ export function CommentSurface() {
   );
 }
 
-// Returns a surface-relative percentage position. If an anchor element is
-// available, the position is re-derived from its current bounding box so the
-// pin tracks the element through reflow. Otherwise falls back to the stored
-// surface-relative coords (legacy behavior).
-function resolvePosition(
-  surface: HTMLElement,
+// Surface-relative percentage position, derived from the anchor's effective
+// rect when available so pins track the real DOM through reflow. Falls back
+// to the legacy surface coords when no anchor is present.
+function computePinPosition(
   surfaceRect: DOMRect,
   anchor: Anchor | null | undefined,
+  anchorRect: DOMRect | null | undefined,
   fallback: { x: number; y: number }
 ): { x: number; y: number } {
-  if (!anchor) return fallback;
-  const el = surface.querySelector<HTMLElement>(
-    `[data-comment-anchor="${cssEscape(anchor.id)}"]`
-  );
-  if (!el) return fallback;
-  const rect = el.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return fallback;
+  if (!anchor || !anchorRect) return fallback;
   if (surfaceRect.width === 0 || surfaceRect.height === 0) return fallback;
 
-  const pinX = rect.left + anchor.offset.x * rect.width;
-  const pinY = rect.top + anchor.offset.y * rect.height;
+  const pinX = anchorRect.left + anchor.offset.x * anchorRect.width;
+  const pinY = anchorRect.top + anchor.offset.y * anchorRect.height;
   return {
     x: (pinX - surfaceRect.left) / surfaceRect.width,
     y: (pinY - surfaceRect.top) / surfaceRect.height,
   };
 }
-
