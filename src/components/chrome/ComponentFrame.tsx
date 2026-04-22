@@ -14,6 +14,8 @@ export function ComponentFrame({ name, children, className, contentClassName }: 
     <section
       aria-label={name}
       data-slot="component-frame"
+      data-comment-anchor={`component:${name}`}
+      data-comment-anchor-label={name}
       className={cn(
         "overflow-hidden rounded-[16px] border border-neutral-200/80 bg-(--bhds-color-gray-25) shadow-sm",
         className

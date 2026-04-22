@@ -12,6 +12,7 @@ import {
 import { usePathname } from "next/navigation";
 
 import type {
+  Anchor,
   Comment,
   Coords,
   CreateCommentInput,
@@ -24,6 +25,7 @@ type Draft = {
   coords: Coords;
   clientX: number;
   clientY: number;
+  anchor: Anchor | null;
 } | null;
 
 type CommentsContextValue = {
@@ -236,6 +238,7 @@ export function CommentsProvider({ children }: { children: React.ReactNode }) {
       const payload: CreateCommentInput = {
         path,
         coords: draft.coords,
+        anchor: draft.anchor,
         author: name,
         body: text,
       };
@@ -245,6 +248,7 @@ export function CommentsProvider({ children }: { children: React.ReactNode }) {
         id: tempId,
         path,
         coords: draft.coords,
+        anchor: draft.anchor,
         author: name,
         body: text,
         createdAt: Date.now(),

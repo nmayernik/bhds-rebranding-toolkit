@@ -3,6 +3,12 @@ export type Coords = {
   y: number;
 };
 
+export type Anchor = {
+  id: string;
+  label?: string;
+  offset: Coords;
+};
+
 export type Reply = {
   id: string;
   author: string;
@@ -14,6 +20,7 @@ export type Comment = {
   id: string;
   path: string;
   coords: Coords;
+  anchor?: Anchor | null;
   author: string;
   body: string;
   createdAt: number;
@@ -24,6 +31,7 @@ export type Comment = {
 export type CreateCommentInput = {
   path: string;
   coords: Coords;
+  anchor?: Anchor | null;
   author: string;
   body: string;
 };

@@ -207,11 +207,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-logo" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-logo" className="text-xl font-semibold">Logo</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:logo:bhds1"
+            data-comment-anchor-label="Logo — BHDS 1"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <LogoMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:logo:bhds2"
+            data-comment-anchor-label="Logo — BHDS 2"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <LogoMatrix themeOverride="bhds2" />
           </div>
@@ -221,11 +231,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-button" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-button" className="text-xl font-semibold">Button</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:button:bhds1"
+            data-comment-anchor-label="Button — BHDS 1"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <ButtonMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:button:bhds2"
+            data-comment-anchor-label="Button — BHDS 2"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <ButtonMatrix themeOverride="bhds2" />
           </div>
@@ -235,11 +255,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-card" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-card" className="text-xl font-semibold">Card</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:card:bhds1"
+            data-comment-anchor-label="Card — BHDS 1"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <CardMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:card:bhds2"
+            data-comment-anchor-label="Card — BHDS 2"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <CardMatrix themeOverride="bhds2" />
           </div>
@@ -249,11 +279,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-inputs" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-inputs" className="text-xl font-semibold">Form Inputs</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:inputs:bhds1"
+            data-comment-anchor-label="Form Inputs — BHDS 1"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 1</h3>
             <InputMatrix themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:inputs:bhds2"
+            data-comment-anchor-label="Form Inputs — BHDS 2"
+            className="rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25) p-6"
+          >
             <h3 className="mb-4 text-sm font-semibold text-neutral-600">BHDS 2</h3>
             <InputMatrix themeOverride="bhds2" />
           </div>
@@ -263,11 +303,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-vpsg" className="mb-12 flex flex-col gap-4">
         <h2 id="cmp-vpsg" className="text-xl font-semibold">Value Prop + Service Grid</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:vpsg:bhds1"
+            data-comment-anchor-label="Value Prop + Service Grid — BHDS 1"
+            className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)"
+          >
             <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 1</h3></div>
             <ValuePropServiceGrid themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:vpsg:bhds2"
+            data-comment-anchor-label="Value Prop + Service Grid — BHDS 2"
+            className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)"
+          >
             <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 2</h3></div>
             <ValuePropServiceGrid themeOverride="bhds2" />
           </div>
@@ -277,11 +327,21 @@ export default function ComparePage() {
       <section aria-labelledby="cmp-bigcta" className="flex flex-col gap-4">
         <h2 id="cmp-bigcta" className="text-xl font-semibold">Big CTA</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div data-theme="bhds1" className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)">
+          <div
+            data-theme="bhds1"
+            data-comment-anchor="compare:bigcta:bhds1"
+            data-comment-anchor-label="Big CTA — BHDS 1"
+            className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)"
+          >
             <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 1</h3></div>
             <BigCta themeOverride="bhds1" />
           </div>
-          <div data-theme="bhds2" className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)">
+          <div
+            data-theme="bhds2"
+            data-comment-anchor="compare:bigcta:bhds2"
+            data-comment-anchor-label="Big CTA — BHDS 2"
+            className="overflow-hidden rounded-lg border border-neutral-200 bg-(--bhds-color-gray-25)"
+          >
             <div className="px-6 pt-4 pb-2"><h3 className="text-sm font-semibold text-neutral-600">BHDS 2</h3></div>
             <BigCta themeOverride="bhds2" />
           </div>

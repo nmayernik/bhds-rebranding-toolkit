@@ -5,6 +5,7 @@ import { Check, CornerDownRight, RotateCcw, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Comment } from "@/lib/comments/types";
+import { AnchorOutline, cssEscape } from "./anchorUtils";
 import { CommentComposer } from "./CommentComposer";
 import { useComments } from "./CommentsProvider";
 
@@ -13,6 +14,59 @@ type Props = {
   surfaceWidth: number;
   surfaceHeight: number;
 };
+
+function usePinPosition(
+  comment: Comment,
+  surfaceWidth: number,
+  surfaceHeight: number
+): { x: number; y: number } {
+  const anchorId = comment.anchor?.id;
+
+  // surfaceWidth/Height change on resize and cause re-renders; also listen to
+  // scroll so getBoundingClientRect results are fresh on sticky layouts.
+  const [scrollTick, setScrollTick] = useState(0);
+  useEffect(() => {
+    if (!anchorId) return;
+    const bump = () => setScrollTick((n) => n + 1);
+    window.addEventListener("scroll", bump, { passive: true });
+    window.addEventListener("resize", bump);
+    return () => {
+      window.removeEventListener("scroll", bump);
+      window.removeEventListener("resize", bump);
+    };
+  }, [anchorId]);
+  void scrollTick;
+
+  if (!anchorId || !comment.anchor) return comment.coords;
+  if (typeof document === "undefined") return comment.coords;
+
+  const surface = document.querySelector<HTMLElement>("[data-comment-surface]");
+  if (!surface) return comment.coords;
+  const anchorEl = surface.querySelector<HTMLElement>(
+    `[data-comment-anchor="${cssEscape(anchorId)}"]`
+  );
+  if (!anchorEl) return comment.coords;
+
+  const surfaceRect = surface.getBoundingClientRect();
+  const anchorRect = anchorEl.getBoundingClientRect();
+  if (
+    surfaceRect.width === 0 ||
+    surfaceRect.height === 0 ||
+    anchorRect.width === 0 ||
+    anchorRect.height === 0
+  ) {
+    return comment.coords;
+  }
+  void surfaceWidth;
+  void surfaceHeight;
+
+  const pinX = anchorRect.left + comment.anchor.offset.x * anchorRect.width;
+  const pinY = anchorRect.top + comment.anchor.offset.y * anchorRect.height;
+  return {
+    x: (pinX - surfaceRect.left) / surfaceRect.width,
+    y: (pinY - surfaceRect.top) / surfaceRect.height,
+  };
+}
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -38,13 +92,15 @@ function formatRelative(ts: number): string {
   return `${d}d ago`;
 }
 
-export function CommentPin({ comment, surfaceWidth }: Props) {
+export function CommentPin({ comment, surfaceWidth, surfaceHeight }: Props) {
   const { activeCommentId, setActiveComment, addReply, resolve, remove, commentModeEnabled } =
     useComments();
   const [replyingValue, setReplyingValue] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const isOpen = activeCommentId === comment.id;
+  const position = usePinPosition(comment, surfaceWidth, surfaceHeight);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,17 +123,35 @@ export function CommentPin({ comment, surfaceWidth }: Props) {
 
   const accent = useMemo(() => colorFor(comment.author), [comment.author]);
   const flipLeft =
-    surfaceWidth > 0 &&
-    comment.coords.x * surfaceWidth + 320 > surfaceWidth - 16;
+    surfaceWidth > 0 && position.x * surfaceWidth + 320 > surfaceWidth - 16;
+
+  const surfaceEl =
+    typeof document === "undefined"
+      ? null
+      : document.querySelector<HTMLElement>("[data-comment-surface]");
+  const surfaceRect = surfaceEl?.getBoundingClientRect() ?? null;
+  const showOutline = Boolean(comment.anchor) && (isOpen || hovered);
 
   return (
-    <div
-      className="absolute z-30"
-      style={{
-        left: `${comment.coords.x * 100}%`,
-        top: `${comment.coords.y * 100}%`,
-      }}
-    >
+    <>
+      {showOutline && comment.anchor && surfaceEl && surfaceRect && (
+        <AnchorOutline
+          anchorId={comment.anchor.id}
+          label={comment.anchor.label}
+          surface={surfaceEl}
+          surfaceRect={surfaceRect}
+          variant={isOpen ? "active" : "muted"}
+        />
+      )}
+      <div
+        className="absolute z-30"
+        style={{
+          left: `${position.x * 100}%`,
+          top: `${position.y * 100}%`,
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
       <button
         type="button"
         onClick={(e) => {
@@ -174,7 +248,8 @@ export function CommentPin({ comment, surfaceWidth }: Props) {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

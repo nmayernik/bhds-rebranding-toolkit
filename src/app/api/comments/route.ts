@@ -5,6 +5,7 @@ import { clientKey, consumeToken } from "@/lib/comments/rateLimit";
 import { getStore } from "@/lib/comments/store";
 import type { Comment } from "@/lib/comments/types";
 import {
+  sanitizeAnchor,
   sanitizeAuthor,
   sanitizeBody,
   sanitizeCoord,
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
   const coordsRaw = payload.coords as Record<string, unknown> | undefined;
   const x = coordsRaw ? sanitizeCoord(coordsRaw.x) : null;
   const y = coordsRaw ? sanitizeCoord(coordsRaw.y) : null;
+  const anchor = sanitizeAnchor(payload.anchor);
 
   if (!path || !author || !body || x === null || y === null) {
     return NextResponse.json({ error: "Invalid fields" }, { status: 400 });
@@ -54,6 +56,7 @@ export async function POST(req: NextRequest) {
     id: createId(),
     path,
     coords: { x, y },
+    anchor,
     author,
     body,
     createdAt: Date.now(),
