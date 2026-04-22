@@ -1,4 +1,4 @@
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 
 import type { Comment } from "./types";
 
@@ -14,6 +14,7 @@ const PATH_INDEX_KEY = "comments:__paths__";
 type CommentsGlobal = typeof globalThis & {
   __bhdsCommentsData?: Map<string, Comment[]>;
   __bhdsCommentsStore?: CommentsStore;
+  __bhdsRedisClient?: Redis;
 };
 
 function getSharedMap(): Map<string, Comment[]> {
@@ -48,43 +49,55 @@ function memoryStore(): CommentsStore {
   };
 }
 
-function redisConfig(): { url: string; token: string } | null {
-  // Accept either Upstash-native or legacy Vercel KV env var names so this
-  // works with the Vercel Marketplace Redis integration and the deprecated
-  // Vercel KV integration without extra wiring.
-  const url =
-    process.env.UPSTASH_REDIS_REST_URL ??
-    process.env.KV_REST_API_URL ??
-    null;
-  const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ??
-    process.env.KV_REST_API_TOKEN ??
-    null;
-  if (!url || !token) return null;
-  return { url, token };
+function getRedisClient(): Redis | null {
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+
+  const g = globalThis as CommentsGlobal;
+  if (g.__bhdsRedisClient) return g.__bhdsRedisClient;
+
+  const client = new Redis(url, {
+    lazyConnect: false,
+    maxRetriesPerRequest: 2,
+    enableReadyCheck: true,
+  });
+  // Prevent an unhandled 'error' from crashing the Node process on transient
+  // issues; individual awaits will still reject.
+  client.on("error", () => {});
+
+  g.__bhdsRedisClient = client;
+  return client;
 }
 
 function redisStore(redis: Redis): CommentsStore {
   const key = (path: string) => `${KEY_PREFIX}${path}`;
 
+  const readList = async (path: string): Promise<Comment[]> => {
+    const raw = await redis.get(key(path));
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw) as Comment[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
   return {
-    async list(path) {
-      const comments = await redis.get<Comment[]>(key(path));
-      return comments ?? [];
-    },
+    list: readList,
     async save(path, comments) {
       if (comments.length === 0) {
         await redis.del(key(path));
         await redis.srem(PATH_INDEX_KEY, path);
       } else {
-        await redis.set(key(path), comments);
+        await redis.set(key(path), JSON.stringify(comments));
         await redis.sadd(PATH_INDEX_KEY, path);
       }
     },
     async findById(id) {
       const paths = await redis.smembers(PATH_INDEX_KEY);
       for (const path of paths) {
-        const comments = (await redis.get<Comment[]>(key(path))) ?? [];
+        const comments = await readList(path);
         const comment = comments.find((c) => c.id === id);
         if (comment) return { path, comment };
       }
@@ -97,9 +110,7 @@ export async function getStore(): Promise<CommentsStore> {
   const g = globalThis as CommentsGlobal;
   if (g.__bhdsCommentsStore) return g.__bhdsCommentsStore;
 
-  const cfg = redisConfig();
-  g.__bhdsCommentsStore = cfg
-    ? redisStore(new Redis({ url: cfg.url, token: cfg.token }))
-    : memoryStore();
+  const redis = getRedisClient();
+  g.__bhdsCommentsStore = redis ? redisStore(redis) : memoryStore();
   return g.__bhdsCommentsStore;
 }
