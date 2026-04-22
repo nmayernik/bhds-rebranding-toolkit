@@ -53,6 +53,9 @@ jobs:
         id: snapshot
         run: |
           set -euo pipefail
+          # Make untracked files visible to `git diff` so first-ever content
+          # is detected as a change.
+          git add --intent-to-add .comments-archive/latest.json
           if git diff --quiet -- .comments-archive/latest.json; then
             echo "No change in latest.json, skipping dated snapshot"
             echo "changed=false" >> "$GITHUB_OUTPUT"
