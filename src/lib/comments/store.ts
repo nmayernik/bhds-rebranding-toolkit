@@ -6,6 +6,7 @@ export interface CommentsStore {
   list(path: string): Promise<Comment[]>;
   save(path: string, comments: Comment[]): Promise<void>;
   findById(id: string): Promise<{ path: string; comment: Comment } | null>;
+  listAll(): Promise<Record<string, Comment[]>>;
 }
 
 const KEY_PREFIX = "comments:";
@@ -45,6 +46,13 @@ function memoryStore(): CommentsStore {
         if (comment) return { path, comment };
       }
       return null;
+    },
+    async listAll() {
+      const out: Record<string, Comment[]> = {};
+      for (const [path, comments] of store.entries()) {
+        out[path] = comments;
+      }
+      return out;
     },
   };
 }
@@ -102,6 +110,17 @@ function redisStore(redis: Redis): CommentsStore {
         if (comment) return { path, comment };
       }
       return null;
+    },
+    async listAll() {
+      const paths = await redis.smembers(PATH_INDEX_KEY);
+      const out: Record<string, Comment[]> = {};
+      await Promise.all(
+        paths.map(async (path) => {
+          const comments = await readList(path);
+          if (comments.length > 0) out[path] = comments;
+        })
+      );
+      return out;
     },
   };
 }

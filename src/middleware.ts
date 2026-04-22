@@ -5,7 +5,12 @@ const SHARED_SECRET = process.env.SHOWCASE_PASSWORD ?? "";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/unlock") || pathname.startsWith("/_next") || pathname.startsWith("/api/unlock")) {
+  if (
+    pathname.startsWith("/unlock") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/unlock") ||
+    pathname.startsWith("/api/comments/export")
+  ) {
     return NextResponse.next();
   }
   const cookie = req.cookies.get(COOKIE_NAME)?.value;

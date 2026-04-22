@@ -1,0 +1,78 @@
+name: Archive comments
+
+on:
+  schedule:
+    # Every hour on the hour (UTC). Adjust as needed.
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: archive-comments
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Fetch comment export
+        id: fetch
+        env:
+          BASE_URL: ${{ vars.SHOWCASE_BASE_URL }}
+          TOKEN: ${{ secrets.ARCHIVE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "SHOWCASE_BASE_URL repo variable is required" >&2
+            exit 1
+          fi
+          if [ -z "${TOKEN:-}" ]; then
+            echo "ARCHIVE_TOKEN repo secret is required" >&2
+            exit 1
+          fi
+          mkdir -p .comments-archive/snapshots
+          curl --fail --show-error --silent \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${BASE_URL%/}/api/comments/export" \
+            -o .comments-archive/latest.raw.json
+          # Pretty-print with deterministic key order so git diffs are minimal.
+          python3 -c "import json,sys;\
+            d=json.load(open('.comments-archive/latest.raw.json'));\
+            open('.comments-archive/latest.json','w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')"
+          rm .comments-archive/latest.raw.json
+
+      - name: Write dated snapshot on change
+        id: snapshot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- .comments-archive/latest.json; then
+            echo "No change in latest.json, skipping dated snapshot"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          stamp=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          cp .comments-archive/latest.json ".comments-archive/snapshots/${stamp}.json"
+          echo "stamp=${stamp}" >> "$GITHUB_OUTPUT"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "comments-archive-bot"
+          git config user.email "comments-archive-bot@users.noreply.github.com"
+          git add .comments-archive/
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(comments): archive snapshot ${{ steps.snapshot.outputs.stamp }}"
+          git push
