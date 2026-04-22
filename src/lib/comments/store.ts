@@ -1,3 +1,5 @@
+import { Redis } from "@upstash/redis";
+
 import type { Comment } from "./types";
 
 export interface CommentsStore {
@@ -12,7 +14,6 @@ const PATH_INDEX_KEY = "comments:__paths__";
 type CommentsGlobal = typeof globalThis & {
   __bhdsCommentsData?: Map<string, Comment[]>;
   __bhdsCommentsStore?: CommentsStore;
-  __bhdsKvPromise?: Promise<KvClient | null>;
 };
 
 function getSharedMap(): Map<string, Comment[]> {
@@ -47,50 +48,43 @@ function memoryStore(): CommentsStore {
   };
 }
 
-type KvClient = {
-  get<T>(key: string): Promise<T | null>;
-  set(key: string, value: unknown): Promise<unknown>;
-  del(key: string): Promise<unknown>;
-  sadd(key: string, value: string): Promise<unknown>;
-  srem(key: string, value: string): Promise<unknown>;
-  smembers(key: string): Promise<string[]>;
-};
-
-async function loadKvClient(): Promise<KvClient | null> {
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-    return null;
-  }
-  try {
-    const mod = (await import(/* webpackIgnore: true */ "@vercel/kv").catch(
-      () => null
-    )) as { kv: KvClient } | null;
-    return mod?.kv ?? null;
-  } catch {
-    return null;
-  }
+function redisConfig(): { url: string; token: string } | null {
+  // Accept either Upstash-native or legacy Vercel KV env var names so this
+  // works with the Vercel Marketplace Redis integration and the deprecated
+  // Vercel KV integration without extra wiring.
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ??
+    process.env.KV_REST_API_URL ??
+    null;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ??
+    process.env.KV_REST_API_TOKEN ??
+    null;
+  if (!url || !token) return null;
+  return { url, token };
 }
 
-function vercelKvStore(kv: KvClient): CommentsStore {
+function redisStore(redis: Redis): CommentsStore {
   const key = (path: string) => `${KEY_PREFIX}${path}`;
 
   return {
     async list(path) {
-      const comments = await kv.get<Comment[]>(key(path));
+      const comments = await redis.get<Comment[]>(key(path));
       return comments ?? [];
     },
     async save(path, comments) {
       if (comments.length === 0) {
-        await kv.del(key(path));
-        await kv.srem(PATH_INDEX_KEY, path);
+        await redis.del(key(path));
+        await redis.srem(PATH_INDEX_KEY, path);
       } else {
-        await kv.set(key(path), comments);
-        await kv.sadd(PATH_INDEX_KEY, path);
+        await redis.set(key(path), comments);
+        await redis.sadd(PATH_INDEX_KEY, path);
       }
     },
     async findById(id) {
-      const paths = await kv.smembers(PATH_INDEX_KEY);
+      const paths = await redis.smembers(PATH_INDEX_KEY);
       for (const path of paths) {
-        const comments = (await kv.get<Comment[]>(key(path))) ?? [];
+        const comments = (await redis.get<Comment[]>(key(path))) ?? [];
         const comment = comments.find((c) => c.id === id);
         if (comment) return { path, comment };
       }
@@ -103,11 +97,9 @@ export async function getStore(): Promise<CommentsStore> {
   const g = globalThis as CommentsGlobal;
   if (g.__bhdsCommentsStore) return g.__bhdsCommentsStore;
 
-  if (!g.__bhdsKvPromise) {
-    g.__bhdsKvPromise = loadKvClient();
-  }
-  const kv = await g.__bhdsKvPromise;
-
-  g.__bhdsCommentsStore = kv ? vercelKvStore(kv) : memoryStore();
+  const cfg = redisConfig();
+  g.__bhdsCommentsStore = cfg
+    ? redisStore(new Redis({ url: cfg.url, token: cfg.token }))
+    : memoryStore();
   return g.__bhdsCommentsStore;
 }
